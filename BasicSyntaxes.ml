@@ -127,29 +127,29 @@ match not true with | true -> "nope" | false -> "yep";;
 let x =
   match not true with
   | true -> "nope"
-  | false -> "yep"
+  | false -> "yep";;
 let y =
   match 42 with
-  | foo -> foo
+  | foo -> foo;;
 let z =
   match "foo" with
   | "bar" -> 0
-  | _ -> 1
+  | _ -> 1;;
 let a =
   match [1;2] with
   | [] -> "empty"
-  | _ -> "not empy"
+  | _ -> "not empty";;
 let b =
   match ["taylor";"swift"] with
   | [] -> "folklore"
-  | h :: t -> h (* t on the right side will give TypeError *)
+  | h :: t -> h;; (* t on the right side will give TypeError *)
 let b =
   match ["taylor";"swift"] with
   | [] -> ["folklore"]
-  | h :: t -> t
+  | h :: t -> t;;
 let fst3 t =
   match t with
-  | (a,b,c) -> a
+  | (a,b,c) -> a;;
 (* accessing to records by names is preferred to using tuples of more than 2 components *)
 let name_with_year s =
   match s with
@@ -159,7 +159,7 @@ name_with_year rbg;;
 let empty lst =
   match lst with
   | [] -> true
-  | h :: t -> false (* better _ :: _ -> false or _ -> false *)
+  | h :: t -> false;; (* better _ :: _ -> false or _ -> false *)
 let rec sum lst = (* recursive *)
   match lst with
   | [] -> 0
@@ -180,3 +180,4 @@ let rec append lst1 lst2 =
 append [1;2;3] [4;5;6];;
 (* many of these list funcs, including append are built into the stdlib;
    built-in operator @ serves as append. *)
+[1;2;3] @ [4;5;6];;
