@@ -6,7 +6,7 @@ let rec pow a b =
   if b = 0 then 1
   else a*(pow a (b-1))
 ;;
-let pf_array n =
+let pf_array n = (* n > 1 *)
   let rec factor n k =
     let rec howmany n k =
       if n mod k > 0 then 0
