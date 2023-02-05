@@ -275,3 +275,215 @@ let center_new s =
    C p is itself a pattern.
    and C is a value and a pattern *)
 ;;
+
+(* algebraic data types *)
+
+(* records and tuples are "each-of" types, aka product types, like a cartesian product.
+   variants, on the other hand, are "one-of" types, aka sum types. *)
+type string_or_int =
+  | String of string
+  | Int of int
+(* the two constructors come from two different sets *)
+type blue_or_pink_int =
+  | Blue of int
+  | Pink of int
+(* taking two copies of the set of all integers, and unioning them together,
+   but keeping track of from which copy.
+   this is called, in mathematics, a "tagged union" *)
+;;
+type ptype =
+  | TNormal
+  | TFire
+  | TWater
+
+  type peff =
+  | ENormal (* without using modules, constructor names can shadow another *)
+  | ENotVery
+  | ESuper
+
+let mult_of_eff = function
+  | ENormal -> 1.
+  | ENotVery -> 0.5
+  | ESuper -> 2.0
+
+let eff = function
+  | (TFire, TFire) | (TWater, TWater) | (TFire, TWater) -> ENotVery
+  | (TWater, TFire) -> ESuper
+  | _ -> ENormal
+(* to use without parentheses:
+   let eff t1 t2 = match t1, t2 with
+    | TFire, TFire | TWater, TWater | TFire, TWater -> ENotVery
+    | ... *)
+
+type mon = {
+  name : string;
+  hp : int;
+  ptype : ptype;
+}
+
+let charmander = {
+  name = "Charmander";
+  hp = 39;
+  ptype = TFire;
+}
+;;
+
+(* recursive and parameterized variants *)
+
+type intlist =
+  | Nil
+  | Cons of int * intlist
+
+let rec length_intlist = function
+  | Nil -> 0
+  | Cons (_, t) -> 1 + length_intlist t
+;;
+Cons (1, Cons (2, Nil));;
+Cons (1, Cons (2, Nil)) |> length_intlist;;
+
+type stringlist =
+  | Nil
+  | Cons of int * stringlist
+
+let rec length_stringlist = function
+  | Nil -> 0
+  | Cons (_, t) -> 1 + length_stringlist t
+;;
+(* 변수의 타입마다 일일이 함수 만들지 말고 paramaterized variant 사용ㄱㄱ *)
+
+type 'a mylist =
+  | Nil
+  | Cons of 'a * 'a mylist
+
+let rec length = function
+  | Nil -> 0
+  | Cons (_, t) -> 1 + length t
+;;
+Cons (1, Nil) |> length;;
+Cons (true, Nil) |> length;;
+
+(* the equivalent using brackets and operators: *)
+type 'a mylist =
+  | []
+  | (::) of 'a * 'a mylist
+
+let rec length = function
+  | [] -> 0
+  | _ :: t -> 1 + length t
+;;
+(* actual implementation of list in stdlib: *)
+type 'a list = [] | (::) of 'a * 'a list
+(* list is a type constructor parameterized on type variable 'a *)
+(* [] and :: are constructors *)
+;;
+
+(* options *)
+(* type 'a option = None | Some of 'a *)
+
+(* think of a box that is either empty (None) or not (Some) *)
+(* 'a is the thing inside the box, possibly None *)
+
+None;; (* - : 'a option = None *)
+Some 1;; (* - : int option = Some 1 *)
+Some [1; 2; 3];; (* - : int list option = Some [1; 2; 3] *)
+
+let get_val = function
+  | None -> failwith "??\n"
+  (* we don't know what 'a is
+     so we cannot return some defualt value *)
+  | Some x -> x
+let get_val_new default = function
+  | None -> default
+  | Some x -> x
+;;
+
+let rec list_max (lst : 'a list) : 'a option =
+  match lst with
+  | [] -> None
+(*|  h :: t -> Some (max h (list_max t)) *)
+(* why does above line cause compilation error?
+   the list_max taken recursively has type 'a option,
+   while the h has type 'a. these two have different types so nope.
+   in other words, t could either be Some or None.
+   instead i should get the value out of the box -
+   the list_max recursively taken. *)
+  | h :: t -> ( (* begin (* instead of left parenthesis *) *)
+    match list_max t with
+    | None -> Some h
+    | Some m -> Some (max h m)
+  ) (* end (* instead of right parenthesis *) *) (* for nested pattern matching *)
+(* pattern match against None, instead of NullPointerException *)
+;;
+
+(* exceptions *)
+(* type exn *)
+
+exception OhNo of string;;
+OhNo "oops";;
+raise (OhNo "oops");;
+
+exception ABadThing;;
+raise ABadThing;;
+(* built-in extensible variant; add new constructors to it with exception *)
+(* raise never returns a real value, so the return type is 'a *)
+(* can treat it as any type desired *)
+let x : int = raise ABadThing;;
+
+(* some predefined exceptions: *)
+(* exception Failure of string *)
+   (* built-in function failwith : string -> 'a *)
+(* exception InvalidArgument of string *)
+   (* built-in function invalid_arg : string -> 'a *)
+raise (Failure "my error message");;
+failwith "my error message";;
+
+let safe_div x y =
+  try x / y with (* just like match with *)
+  | Division_by_zero -> 0
+;;
+safe_div 4 0;;
+
+(* if e ==> v then (try e ...) ==> v *)
+(* if e raises an exception x then
+   match x against the patterns,
+   if none match, reraise x *)
+
+(* binary trees! *)
+
+(* compare: *)
+(*
+type 'a mylist =
+  | Nil
+  | Cons of 'a * 'a mylist
+*)
+
+type 'a tree =
+  | Leaf (* an empty tree that contains nothing *)
+  | Node of 'a * 'a tree * 'a tree (* contains value 'a, as well as two 'a trees *)
+(* each node of 'a mylist has only one child while 'a tree has two *)
+let t = 
+  Node (1,
+    Node (2, Leaf, Leaf),
+    Node (3, Leaf, Leaf)
+  )
+(*
+       1
+    /    \
+   2      3
+  / \    / \
+ l   l  l   l
+*)
+
+let rec size = function
+  | Leaf -> 0
+  | Node (_, l, r) -> 1 + size l + size r
+(*
+let rec sum = function
+  | Nil -> 0
+  | Con (h, t) = h + sum t
+*)
+
+let rec sum = function
+  | Leaf -> 0
+  | Node (v, l, r) -> v + sum l + sum r
+;;
