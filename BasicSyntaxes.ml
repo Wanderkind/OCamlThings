@@ -487,3 +487,123 @@ let rec sum = function
   | Leaf -> 0
   | Node (v, l, r) -> v + sum l + sum r
 ;;
+
+(* higher order functions *)
+
+let double x = 2*x;;
+let square x = x*x;;
+let quad x = 4*x;;
+let quad' x = double (double x);;
+let quad'' x = x |> double |> double;;
+let fourth = x*x*x*x;;
+let fourth' x = square (square x);;
+let fourth'' x = x |> square |> square;;
+(* here comes the chad *)
+let twice f x = f (f x);;
+let twice' f x = x |> f |> f;;
+let quad''' x = twice double x;;
+let fourth''' x = twice square x;;
+(* another chad *)
+let quad'''' = twice double;;
+
+(* map *)
+open List;;
+
+let f x = 2*x;;
+map (fun x -> f x) [1; 2; 3];; (* boilerplate *)
+map f [1; 2; 3];;
+
+let rec add1 = function
+  | [] -> []
+  | h :: t -> (h + 1) :: add1 t
+
+let rec concat3110 = function
+  | [] -> []
+  | h :: t -> (h ^ "3110") :: concat3110 t
+
+let rec transform f = function
+  | [] -> []
+  | h :: t -> f h :: transform f t
+
+let add1' lst = transform (fun x -> x + 1) lst
+let concat3110' lst = transform (fun x -> x ^ "3110") lst
+;;
+(* transform is map! *)
+let stringlist_of_intlist lst = map string_of_int lst;;
+(* abstraction principle :
+   factor out recurring code patterns, don't duplicate them. *)
+
+(* combining *)
+let rec sum = function
+  | [] -> 0
+  | h :: t -> h + sum t
+let rec concat = function
+  | [] -> ""
+  | h :: t -> h ^ concat t
+
+let rec combine init op = function
+  | [] -> init
+  | h :: t -> op h (combine init op t)
+let sum' lst = combine 0 ( + ) lst
+let concat' lst = combine "" ( ^ ) lst
+;;
+
+(* fold *)
+
+let rec fold_right f lst acc = match lst with (* tail recursive *)
+  | [] -> acc
+  | h :: t ->
+    f h (fold_right f t acc)
+(* f a (f b (f c init)) = fold_right f [a; b; c] init *)
+let rec fold_left f acc lst = match lst with (* not tail recursive *)
+  | [] -> acc
+  | h :: t -> (*
+    let acc' = f acc h
+    in fold_left f acc' t *)
+    fold_left f (f acc h) t
+;;
+
+(* filter *)
+
+let rec evens = function
+  | [] -> []
+  | h :: t -> if h mod 2 = 0 then h :: evens t else evens t
+
+let rec odds = function
+  | [] -> []
+  | h :: t -> if h mod 2 = 1 then h :: odds t else odds t
+
+let rec filter p = function (* not tail recursive *)
+  | [] -> []
+  | h :: t -> if p h then h :: filter p t else filter p t
+
+let evens' lst = let even x = x mod 2 = 0 in filter even lst
+let odds' lst = let odd x = x mod 2 = 1 in filter odd lst
+let rec filter_aux p acc = function (* tail recursive *)
+  | [] -> rev acc
+  | h :: t -> filter_aux p (if p h then h :: acc else acc) t
+let rec filter p lst = filter_aux p [] lst
+;;
+
+(* trees with map and fold *)
+
+let rec map f = function
+  | Leaf -> Leaf
+  | Node (v, l, r) -> Node (f v, map f l, map f r)
+
+let add1 t = map succ t
+
+let rec fold acc f = function
+  | Leaf -> acc
+  | Node (v, l, r) -> f v (fold acc f l) (fold acc f r)
+
+let sum t = fold 0 (fun x y z -> x + y + z) t
+;;
+
+let t = Node (1,
+        Node (2, Leaf, Leaf),
+        Node (3, Leaf, Leaf))
+;;
+add1 t;;
+sum t;;
+t |> add1 |> sum;;
