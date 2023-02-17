@@ -13,6 +13,6 @@ let rec eval eval_base expr =
   | False      -> false
   | Base base  -> eval_base base
   | And (x, y) -> eval' x && eval' y
-  | Or  (x, y)  -> eval' x && eval' y
+  | Or  (x, y) -> eval' x || eval' y
   | Not x -> not (eval' x)
 ;;
